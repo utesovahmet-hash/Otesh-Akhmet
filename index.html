@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Виртуалды зертхана: Кеплердің үшінші заңы және Ньютонның тартылыс заңы</title>
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;font:15px/1.55 "Segoe UI",system-ui,sans-serif;color:#e8edff;background:radial-gradient(ellipse at 50% 0,#122456,#060d24 65%) fixed}
+header{padding:18px 24px;border-bottom:1px solid #26397a;background:#08112e}
+h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;color:#93a6dc;font-size:14px}
+main{display:grid;grid-template-columns:390px 1fr;gap:18px;padding:18px;max-width:1440px;margin:auto}
+@media(max-width:920px){main{grid-template-columns:1fr}}
+section{background:#0c1740dd;border:1px solid #26397a;border-radius:10px;padding:14px;margin-bottom:18px}
+h2{font-size:16px;margin:0 0 10px;color:#ffc247}
+.tabs,.pre,.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;color:#e8edff;background:#18296a;border:1px solid #3b57b3;border-radius:7px;padding:7px 14px;cursor:pointer}
+button:hover{background:#22388a}
+button.on,button.go{background:#ffc247;color:#1b1400;border-color:#ffc247;font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #5fd4ff;outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 112px;gap:6px 8px;margin-bottom:10px}
+.row label{grid-column:1/3;font-size:14px;color:#b9c6ef}
+input,select{font:inherit;color:#e8edff;background:#050b22;border:1px solid #3b57b3;border-radius:7px;padding:7px 9px;min-width:0;width:100%}
+canvas{width:100%;height:auto;border-radius:8px;display:block;background:#050b22}
+.ctl{margin-top:10px}.ctl input{width:150px}
+.f{font:italic 18px/1.4 "Cambria Math",Cambria,"Times New Roman",serif;background:#050b22;border-radius:7px;padding:8px 12px;margin:6px 0;overflow-x:auto}
+.fr{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle}
+.fr i{padding:0 6px}.fr i:first-child{border-bottom:1px solid #e8edff}
+ol{margin:6px 0;padding-left:22px}li{margin:4px 0}
+.big{font-size:20px;font-weight:600;margin:4px 0}
+.ok,.err,.note{border-radius:8px;padding:10px 12px;margin:8px 0}
+.ok{background:#0d3a2a;border:1px solid #3fbf86}
+.err{background:#44111d;border:1px solid #ff6b81}
+.note{background:#1b2a63;border:1px solid #5a74d1;font-size:14px;margin:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border-bottom:1px solid #26397a;padding:5px 6px;text-align:left}
+</style>
+</head>
+<body>
+<header><h1>Кеплердің үшінші заңы және Ньютонның бүкіләлемдік тартылыс заңы</h1><p>Виртуалды зертхана: планета массасын және Күнді айналу периодын есептеу</p></header>
+<main>
+<div>
+<section><h2>Режим және дайын үлгілер</h2>
+<div class="tabs"><button id="t1" class="on">Планета массасы</button><button id="t2">Айналу периоды</button></div>
+<div class="pre" style="margin-top:10px"><span>Үлгі:</span><button data-p="earth">Жер</button><button data-p="mars">Марс</button><button data-p="jup">Юпитер</button></div></section>
+<section><h2>Енгізілетін шамалар</h2>
+<div class="row"><label for="M">Күн массасы M</label><input id="M"><select id="uM"><option value="1">кг</option><option value="1.98847e30">M☉ (Күн массасы)</option></select></div>
+<div class="row" id="rm" hidden><label for="m">Планета массасы m (m ≥ 0)</label><input id="m"><select id="um"><option value="1">кг</option><option value="5.9722e24">M⊕ (Жер массасы)</option></select></div>
+<div class="row"><label for="a">Орташа қашықтық a (Күннен)</label><input id="a"><select id="ua"><option value="1000">км</option><option value="149597870700">а.б.</option><option value="1">м</option></select></div>
+<div class="row" id="rT"><label for="T">Күнді айналу периоды T</label><input id="T"><select id="uT"><option value="86400">тәулік</option><option value="31557600">жыл</option><option value="1">с</option></select></div>
+<button class="go" id="calc">Есептеу</button></section>
+<section><h2>Екі түрлі период</h2><div class="note">Формуладағы T планетаның <b>Күнді айналу</b> (орбиталық) периоды, яғни оның жылы. Планетаның <b>өз осінен айналу</b> периоды (тәулік ұзақтығы) мүлде басқа шама: ол орбитаға байланысты емес, сондықтан оны T орнына қойып, планета массасын бұл формуламен есептеуге болмайды.<span id="rot"></span></div></section>
+</div>
+<div>
+<section><h2>Орбита визуализациясы</h2><canvas id="cv" width="760" height="520"></canvas>
+<div class="ctl"><button id="b1" class="go">Бастау</button><button id="b2">Тоқтату</button><button id="b3">Қайта бастау</button><label for="sp">Жылдамдық</label><input type="range" id="sp" min="1" max="200" value="10"><b id="spv">×1</b></div></section>
+<section><h2>Есептеу нәтижесі</h2><div id="out"></div></section>
+</div>
+</main>
+<script>
+const $=i=>document.getElementById(i),G=6.6743e-11,AU=1.495978707e11,YR=31557600,DAY=86400,ME=5.9722e24;
+const P={
+earth:{n:'Жер',m:'5.9722e24',a:'1.000000',T:'365.256363',rm:5.9722e24,rT:365.256363*DAY,rot:'23 сағ 56 мин',c:'#4aa8ff'},
+mars:{n:'Марс',m:'6.4171e23',a:'1.523679',T:'686.9800',rm:6.4171e23,rT:686.98*DAY,rot:'24 сағ 37 мин',c:'#ff6b4a'},
+jup:{n:'Юпитер',m:'1.89813e27',a:'5.2029',T:'4332.59',rm:1.89813e27,rT:4332.59*DAY,rot:'9 сағ 56 мин',c:'#e0b080'}};
+let mode=1,ref=null,run=true,th=0,t=0,last=0,viz={a:1,T:YR};
+const f=x=>{if(x===0)return'0';const A=Math.abs(x);if(A>=1e-3&&A<1e6)return(+x.toPrecision(6)+'').replace('.',',');const[s,p]=x.toExponential(4).split('e');return s.replace('.',',')+' × 10<sup>'+ +p+'</sup>'};
+const n=x=>(+x.toPrecision(5)+'').replace('.',','),
+sg=s=>Math.max(s.toLowerCase().split('e')[0].replace(/[-+.,\s]/g,'').replace(/^0+/,'').length,1),
+fr=(u,d)=>`<span class="fr"><i>${u}</i><i>${d}</i></span>`,
+tb=r=>`<table><tr><th>Шама</th><th>Есептелген</th><th>Салыстырылатын мән</th><th>Айырма, %</th></tr>${r.map(([s,x,y,u])=>`<tr><td>${s}</td><td>${f(x)} ${u}</td><td>${f(y)} ${u}</td><td>${f((x/y-1)*100)}</td></tr>`).join('')}</table>`;
+
+function calc(){
+ const g=i=>{const s=$(i).value.trim(),v=s===''?NaN:Number(s.replace(',','.'));return{s,x:isFinite(v)?v:NaN}},
+ k=i=>+$(i).value,M=g('M'),m=g('m'),a=g('a'),T=g('T'),
+ Mk=M.x*k('uM'),mk=m.x*k('um'),ak=a.x*k('ua'),Tk=T.x*k('uT'),e=[];
+ if(!(M.x>0))e.push('M > 0: Күн массасын оң сан етіп енгізіңіз.');
+ if(!(a.x>0))e.push('a > 0: қашықтықты оң сан етіп енгізіңіз.');
+ if(mode==1&&!(T.x>0))e.push('T > 0: период оң сан болуы керек.');
+ if(mode==2&&!(m.x>=0))e.push('m ≥ 0: планета массасы теріс болмауы керек.');
+ let h='';
+ if(e.length)h=`<div class="err"><b>Енгізу қатесі</b><ul>${e.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+ else if(mode==1){
+  const A=4*Math.PI**2*ak**3,B=G*Tk**2,S=A/B,mm=S-Mk,dl=s=>5*10**-sg(s),d=Math.hypot(3*dl(a.s)*S,2*dl(T.s)*S,dl(M.s)*Mk);
+  let w='';
+  if(!isFinite(mm))w='сан шектен тыс, енгізілген мәндерді тексеріңіз.';
+  else{viz.a=ak/AU;viz.T=Tk;
+   if(mm<=0)w=`m = ${f(mm)} кг, яғни m ≤ 0. Бұл физикалық мағынасы жоқ: M + m = ${f(S)} кг мәні M = ${f(Mk)} кг мәнінен үлкен емес. Себебі: a, T немесе M қате енгізілген, не олардың дәлдігі төмен.`;
+   else if(d>=mm)w=`дәлдік жеткіліксіз. m = ${f(mm)} кг, ал енгізілген цифр санынан бағаланған белгісіздік Δm ≈ ±${f(d)} кг ≥ m. Планета массасы Күнмен салыстырғанда өте аз (m/M = ${f(mm/Mk)}), ал m = (M + m) − M екі үлкен санның айырмасы. a, T және M мәндерін көбірек мәнді цифрмен енгізіңіз.`}
+  const rows=[['M + m (есептелген) және M (енгізілген)',S,Mk,'кг']];
+  if(!w&&ref)rows.push(['m (есептелген) және m (анықтамалық)',mm,ref.rm,'кг']);
+  h=(w?`<div class="err"><b>Қате нәтиже:</b> ${w}</div>`:`<div class="ok"><div class="big">m = ${f(mm)} кг</div>m ≈ ${f(mm/ME)} M⊕ (Жер массасы), белгісіздік шамамен ±${f(d)} кг</div>`)+
+  `<b>Формула</b><div class="f">m = ${fr('4π²a³','G·T²')} − M</div>
+  <b>Орнына қойылған мәндер (СИ)</b><div class="f">m = ${fr(`4π²·(${f(ak)} м)³`,`${f(G)}·(${f(Tk)} с)²`)} − ${f(Mk)} кг</div>
+  <b>Есептеу қадамдары</b><ol>
+  <li>СИ жүйесіне ауыстыру: M = ${f(Mk)} кг, a = ${f(ak)} м, T = ${f(Tk)} с.</li>
+  <li>Дәрежеге шығару: a³ = ${f(ak**3)} м³, T² = ${f(Tk**2)} с².</li>
+  <li>Алымы 4π²a³ = ${f(A)}, бөлімі G·T² = ${f(B)}.</li>
+  <li>Жүйенің жалпы массасы: M + m = ${f(S)} кг.</li>
+  <li>Планета массасы: m = ${f(S)} − ${f(Mk)} = ${f(mm)} кг.</li>
+  <li>Жер массасымен: m / M⊕ = ${f(mm/ME)}.</li></ol>`+(isFinite(S)?`<b>Салыстыру</b>${tb(rows)}`:'');
+ }else{
+  const sm=Mk+mk,A=ak**3,B=G*sm,q=A/B,sq=Math.sqrt(q),Ts=2*Math.PI*sq,T0=2*Math.PI*Math.sqrt(A/(G*Mk));
+  if(!isFinite(Ts)||Ts<=0)h='<div class="err"><b>Қате нәтиже:</b> сан шектен тыс, енгізілген мәндерді тексеріңіз.</div>';
+  else{viz.a=ak/AU;viz.T=Ts;
+   const rows=[['T (Ньютон, M + m) және T₀ (Кеплер, m = 0)',Ts,T0,'с']];
+   if(ref)rows.push(['T (есептелген) және T (бақылау)',Ts,ref.rT,'с']);
+   h=`<div class="ok"><div class="big">T = ${f(Ts)} с</div>T ≈ ${f(Ts/DAY)} тәулік ≈ ${f(Ts/YR)} жыл</div>
+   <b>Формула</b><div class="f">T = 2π·√(${fr('a³','G·(M + m)')})</div>
+   <b>Орнына қойылған мәндер (СИ)</b><div class="f">T = 2π·√(${fr(`(${f(ak)} м)³`,`${f(G)}·(${f(Mk)} + ${f(mk)}) кг`)})</div>
+   <b>Есептеу қадамдары</b><ol>
+   <li>СИ жүйесіне ауыстыру: M = ${f(Mk)} кг, m = ${f(mk)} кг, a = ${f(ak)} м.</li>
+   <li>a³ = ${f(A)} м³, M + m = ${f(sm)} кг.</li>
+   <li>G·(M + m) = ${f(B)} м³/с².</li>
+   <li>a³ / (G·(M + m)) = ${f(q)} с², түбір астынан: ${f(sq)} с.</li>
+   <li>T = 2π · ${f(sq)} = ${f(Ts)} с = ${f(Ts/DAY)} тәулік = ${f(Ts/YR)} жыл.</li></ol>
+   <b>Салыстыру</b>${tb(rows)}`}
+ }
+ $('out').innerHTML=h;
+ $('rot').innerHTML=ref?`<br><b>${ref.n}:</b> өз осінен айналу ${ref.rot}, Күнді айналу ${f(ref.rT/DAY)} тәулік.`:'';
+}
+function setMode(q){mode=q;$('t1').className=q==1?'on':'';$('t2').className=q==2?'on':'';$('rm').hidden=q==1;$('rT').hidden=q==2;calc()}
+function pre(q){const p=P[q];$('M').value='1.98847e30';$('uM').value='1';$('m').value=p.m;$('um').value='1';$('a').value=p.a;$('ua').value='149597870700';$('T').value=p.T;$('uT').value='86400';calc();ref=p;calc()}
+['M','m','a','T','uM','um','ua','uT'].forEach(i=>$(i).oninput=()=>{ref=null;calc()});
+$('t1').onclick=()=>setMode(1);$('t2').onclick=()=>setMode(2);
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>pre(b.dataset.p));
+$('calc').onclick=calc;
+$('b1').onclick=()=>run=true;$('b2').onclick=()=>run=false;$('b3').onclick=()=>{th=t=0;run=true};
+const sp=()=>$('sp').value/10;$('sp').oninput=()=>$('spv').textContent='×'+sp();
+
+const c=$('cv').getContext('2d'),W=760,H=520,st=Array.from({length:140},()=>[Math.random()*W,Math.random()*H,Math.random()*1.3+.3]);
+function draw(now){
+ const dt=Math.min((now-last)/1000||0,.1);last=now;
+ if(run){const w=Math.min(2*Math.PI*(YR/6)*sp()/viz.T,6);th+=w*dt;t+=w*dt*viz.T/(2*Math.PI)}
+ c.fillStyle='#050b22';c.fillRect(0,0,W,H);
+ c.fillStyle='#b8c8ff';st.forEach(s=>{c.globalAlpha=s[2]/1.6;c.beginPath();c.arc(s[0],s[1],s[2],0,7);c.fill()});c.globalAlpha=1;
+ const x0=W/2,y0=H/2,r=Math.min(H/2-16,40+85*Math.log10(1+3*viz.a)),px=x0+r*Math.cos(th),py=y0+r*Math.sin(th),p=ref||{n:'Планета',c:'#5fd4ff'};
+ c.lineWidth=1.5;c.strokeStyle='#4766c9';c.setLineDash([7,7]);c.beginPath();c.arc(x0,y0,r,0,7);c.stroke();
+ c.setLineDash([]);c.strokeStyle='rgba(255,194,71,.4)';c.beginPath();c.moveTo(x0,y0);c.lineTo(px,py);c.stroke();
+ const g=c.createRadialGradient(x0,y0,4,x0,y0,38);g.addColorStop(0,'#fff3b0');g.addColorStop(.45,'#ffb52e');g.addColorStop(1,'rgba(255,140,0,0)');
+ c.fillStyle=g;c.beginPath();c.arc(x0,y0,38,0,7);c.fill();
+ c.fillStyle=p.c;c.beginPath();c.arc(px,py,8,0,7);c.fill();
+ c.fillStyle='#e8edff';c.font='14px "Segoe UI",sans-serif';
+ c.fillText('Күн',x0+24,y0-24);c.fillText(p.n,px+13,py-13);
+ c.fillText('a = '+n(viz.a)+' а.б.',16,H-52);c.fillText('T = '+n(viz.T/DAY)+' тәулік',16,H-34);
+ c.fillText('t = '+(t<2*YR?n(t/DAY)+' тәулік':n(t/YR)+' жыл'),16,H-16);
+ requestAnimationFrame(draw)}
+pre('jup');requestAnimationFrame(draw);
+</script>
+</body>
+</html>
